@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${product.name}">Товар</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .rating-stars { color: #ffc107; }
+        .review-card { border-left: 4px solid #0d6efd; }
+        .reply-card { border-left: 4px solid #6c757d; margin-left: 40px; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Электроника</a>
+        <a href="/products/" class="btn btn-outline-light">← Назад в каталог</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <!-- Информация о товаре -->
+        <div class="col-md-6">
+            <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/500'}"
+                 class="img-fluid rounded mb-3" alt="Product Image">
+
+            <h1 th:text="${product.name}">Название товара</h1>
+            <span class="badge bg-secondary" th:text="${product.categoryName}">Категория</span>
+
+            <div class="my-3">
+                <span class="rating-stars">
+                    <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                        <span th:if="${product.averageRating >= i}">★</span>
+                        <span th:if="${product.averageRating < i}">☆</span>
+                    </th:block>
+                </span>
+                <span class="ms-2" th:text="${#numbers.formatDecimal(product.averageRating, 1, 1)} + ' из 5'">0.0 из 5</span>
+            </div>
+
+            <h2 class="text-primary" th:text="${product.price + ' ₽'}">0 ₽</h2>
+            <p class="text-muted" th:if="${product.quantity == 0}">Нет в наличии</p>
+            <p class="text-success" th:if="${product.quantity > 0}" th:text="'В наличии: ' + ${product.quantity} + ' шт.'">В наличии</p>
+
+            <div sec:authorize="hasRole('CLIENT')">
+                <form th:action="@{/cart/add/{id}(id=${product.id})}" method="post">
+                    <button type="submit" class="btn btn-primary btn-lg">В корзину</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Описание и характеристики -->
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Описание</h5>
+                    <p class="card-text" th:text="${product.description}">Описание товара</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Характеристики</h5>
+                    <pre class="card-text" th:text="${product.characteristics}">Характеристики</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Отзывы (Требование №6, №8) -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Отзывы о товаре</h3>
+
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+            <!-- Форма добавления отзыва -->
+            <div sec:authorize="hasRole('CLIENT')" class="card mb-4">
+                <div class="card-body">
+                    <h5>Оставить отзыв</h5>
+                    <form th:action="@{/products/{id}/review(id=${product.id})}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Оценка</label>
+                            <select name="rating" class="form-select" required>
+                                <option value="5">5 - Отлично</option>
+                                <option value="4">4 - Хорошо</option>
+                                <option value="3">3 - Нормально</option>
+                                <option value="2">2 - Плохо</option>
+                                <option value="1">1 - Ужасно</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Комментарий</label>
+                            <textarea name="comment" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                    </form>
+                </div>
+            </div>
+
+            <div sec:authorize="!isAuthenticated()" class="alert alert-info">
+                <a th:href="@{/login}">Войдите</a>, чтобы оставить отзыв
+            </div>
+
+            <!-- Список отзывов -->
+            <div class="mt-4">
+                <div th:each="review : ${reviews}" class="card review-card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-subtitle mb-2 text-muted" th:text="${review.username}">Пользователь</h6>
+                            <span class="rating-stars">
+                                <th:block th:each="i : ${#numbers.sequence(1, 5)}">
+                                    <span th:if="${review.rating >= i}">★</span>
+                                    <span th:if="${review.rating < i}">☆</span>
+                                </th:block>
+                            </span>
+                        </div>
+                        <p class="card-text" th:text="${review.comment}">Комментарий</p>
+                        <small class="text-muted" th:text="${#temporals.format(review.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</small>
+
+                        <!-- Форма ответа на отзыв -->
+                        <div sec:authorize="hasRole('CLIENT')" class="mt-3">
+                            <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    th:attr="data-bs-toggle='collapse', data-bs-target='#replyForm' + ${review.id}">
+                                Ответить
+                            </button>
+
+                            <div class="collapse mt-2" th:id="'replyForm' + ${review.id}">
+                                <form th:action="@{/products/review/{reviewId}/reply(reviewId=${review.id})}" method="post">
+                                    <textarea name="text" class="form-control mb-2" rows="2" required></textarea>
+                                    <button type="submit" class="btn btn-sm btn-primary">Отправить ответ</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Ответы на отзыв -->
+                        <div th:if="${review.replies != null and !review.replies.isEmpty()}" class="mt-3">
+                            <div th:each="reply : ${review.replies}" class="card reply-card mb-2">
+                                <div class="card-body py-2">
+                                    <strong th:text="${reply.username}">Пользователь</strong>
+                                    <p class="mb-1" th:text="${reply.text}">Текст ответа</p>
+                                    <small class="text-muted" th:text="${#temporals.format(reply.createdAt, 'dd.MM.yyyy HH:mm')}">Дата</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${#lists.isEmpty(reviews)}" class="alert alert-info">
+                    Отзывов пока нет. Будьте первым!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

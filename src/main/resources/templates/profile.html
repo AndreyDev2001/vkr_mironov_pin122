@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Электроника</a>
+        <a href="/products/" class="btn btn-outline-light">В магазин</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 class="mb-4">Профиль пользователя</h1>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="row">
+        <!-- Личные данные -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Личные данные</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/profile/update}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Имя пользователя</label>
+                            <input type="text" class="form-control" th:value="${user.username}" disabled>
+                            <small class="text-muted">Изменение имени недоступно</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control"
+                                   th:value="${user.email}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Телефон</label>
+                            <input type="tel" name="phone" class="form-control"
+                                   th:value="${user.phone}" placeholder="+7 (999) 000-00-00">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Смена пароля -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Смена пароля</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/profile/change-password}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Текущий пароль *</label>
+                            <input type="password" name="currentPassword" class="form-control" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Новый пароль *</label>
+                            <input type="password" name="newPassword" class="form-control"
+                                   required minlength="6">
+                            <small class="text-muted">Минимум 6 символов</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Подтверждение нового пароля *</label>
+                            <input type="password" name="confirmPassword" class="form-control" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning">Изменить пароль</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Блок информации и специфичных кнопок по ролям -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация о пользователе</h5>
+
+                    <p class="mb-3">
+                        <strong>Ваша роль:</strong>
+                        <span sec:authorize="hasRole('CLIENT')" class="badge bg-primary">Клиент</span>
+                        <span sec:authorize="hasRole('ADMIN')" class="badge bg-danger">Администратор</span>
+                    </p>
+
+                    <!-- Кнопка ТОЛЬКО для Клиента -->
+                    <div sec:authorize="hasRole('CLIENT')" class="d-grid gap-2">
+                        <a href="/orders" class="btn btn-primary">
+                            📦 История заказов
+                        </a>
+                        <small class="text-muted text-center">Просмотреть статус и детали ваших покупок</small>
+                    </div>
+
+                    <!-- Кнопка ТОЛЬКО для Администратора -->
+                    <div sec:authorize="hasRole('ADMIN')" class="d-grid gap-2">
+                        <a href="/admin" class="btn btn-danger">
+                            ⚙️ Перейти в админ-панель
+                        </a>
+                        <small class="text-muted text-center">Управление товарами, категориями и отчетами</small>
+                    </div>
+
+                    <!-- Общая ссылка для возврата в магазин (видна всем) -->
+                    <hr>
+                    <div class="d-grid">
+                        <a href="/" class="btn btn-outline-secondary">
+                            🛒 Вернуться в магазин
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

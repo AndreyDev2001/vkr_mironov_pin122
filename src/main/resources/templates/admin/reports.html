@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчёты</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/admin">Админ-панель</a>
+        <a href="/admin" class="btn btn-outline-light">Назад</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 class="mb-4">Отчёты по продажам</h1>
+
+    <!-- Форма выбора периода -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/admin/reports/generate}" method="post" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Дата начала</label>
+                    <input type="date" name="startDate" class="form-control"
+                           th:value="${startDate}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Дата окончания</label>
+                    <input type="date" name="endDate" class="form-control"
+                           th:value="${endDate}" required>
+                </div>
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary">Сформировать</button>
+                    <button type="submit" formaction="/admin/reports/pdf"
+                            formmethod="post" class="btn btn-success">PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Результаты отчёта -->
+    <div th:if="${report != null}">
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-white bg-primary">
+                    <div class="card-body text-center">
+                        <h3 th:text="${report.totalRevenue} + ' ₽'">0 ₽</h3>
+                        <p>Выручка</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body text-center">
+                        <h3 th:text="${report.totalOrders}">0</h3>
+                        <p>Заказы</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-info">
+                    <div class="card-body text-center">
+                        <h3 th:text="${report.totalItemsSold}">0</h3>
+                        <p>Продано товаров</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Продажи по товарам -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Востребованность товаров</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Продано (шт)</th>
+                        <th>Выручка</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${report.productSales}">
+                        <td th:text="${item.productName}">Товар</td>
+                        <td th:text="${item.quantitySold}">0</td>
+                        <td th:text="${item.revenue} + ' ₽'">0 ₽</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(report.productSales)}">
+                        <td colspan="3" class="text-center">Нет данных за выбранный период</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Продажи по категориям -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Востребованность категорий</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Категория</th>
+                        <th>Продано (шт)</th>
+                        <th>Выручка</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${report.categorySales}">
+                        <td th:text="${item.categoryName}">Категория</td>
+                        <td th:text="${item.quantitySold}">0</td>
+                        <td th:text="${item.revenue} + ' ₽'">0 ₽</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(report.categorySales)}">
+                        <td colspan="3" class="text-center">Нет данных за выбранный период</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
